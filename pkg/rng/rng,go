@@ -1,0 +1,44 @@
+package rng
+
+import (
+    "crypto/rand"
+    "math/big"
+    "math"
+)
+
+type RNG interface {
+    // Intn returns a non-negative pseudo-random number in [0, n).
+    Intn(n int) int
+    // RandomBytes returns a slice of random bytes.
+    RandomBytes(size int) ([]byte, error)
+}
+
+// defaultRNG uses Go's crypto/rand to generate random values
+type defaultRNG struct{}
+
+// NewDefaultRNG returns an RNG that relies on cryptographically secure randomness.
+func NewDefaultRNG() RNG {
+    return &defaultRNG{}
+}
+
+func (drng *defaultRNG) Intn(n int) int {
+    if n <= 0 {
+        return 0
+    }
+    // Use crypto/rand to generate a random int in [0, n)
+    max := big.NewInt(int64(n))
+    num, err := rand.Int(rand.Reader, max)
+    if err != nil {
+        return 0
+    }
+    return int(num.Int64())
+}
+
+func (drng *defaultRNG) RandomBytes(size int) ([]byte, error) {
+    b := make([]byte, size)
+    _, err := rand.Read(b)
+    if err != nil {
+        return nil, err
+    }
+    return b, nil
+}
